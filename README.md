@@ -40,8 +40,8 @@ A web-based appointment and communication platform enabling students to book app
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/student-teacher-booking.git
-cd student-teacher-booking
+git clone https://github.com/gunjan0811/Student--teacher-Appointment.git
+cd Student--teacher-Appointment
 ```
 
 ### 2. Firebase Configuration
