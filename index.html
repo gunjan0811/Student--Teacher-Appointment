@@ -2,38 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login / Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f1f1f1; }
-    .container { background: #fff; padding: 20px; border-radius: 10px; width: 300px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    .form { display: none; }
-    .form.active { display: block; }
-    select, input, button { width: 100%; margin: 10px 0; padding: 8px; }
-    .toggle { text-align: center; cursor: pointer; color: blue; text-decoration: underline; }
+    body { background: #f8f9fa; }
+    .card { max-width: 400px; margin: 5% auto; }
+    .toggle-link { cursor: pointer; color: #0d6efd; text-decoration: underline; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="signupForm" class="form active">
-      <h2>Sign Up</h2>
-      <input type="email" id="signupEmail" placeholder="Email" />
-      <input type="password" id="signupPassword" placeholder="Password" />
-      <select id="signupRole">
-        <option value="" disabled selected>Select Role</option>
-        <option value="admin">Admin</option>
-        <option value="teacher">Teacher</option>
-        <option value="student">Student</option>
-      </select>
-      <button onclick="signup()">Sign Up</button>
-      <p class="toggle" onclick="switchForm('signin')">Already have an account? Sign In</p>
-    </div>
+  <div class="card shadow">
+    <div class="card-body">
+      <h4 class="card-title text-center" id="formTitle">Sign Up</h4>
+      
+      <form id="signupForm" class="needs-validation" novalidate>
+        <div class="mb-3">
+          <input type="email" class="form-control" id="signupEmail" placeholder="Email" required />
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" id="signupPassword" placeholder="Password" required />
+        </div>
+        <div class="mb-3">
+          <select id="signupRole" class="form-select" required>
+            <option value="" disabled selected>Select Role</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+          </select>
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-primary" type="submit">Sign Up</button>
+        </div>
+      </form>
 
-    <div id="signinForm" class="form">
-      <h2>Sign In</h2>
-      <input type="email" id="signinEmail" placeholder="Email" />
-      <input type="password" id="signinPassword" placeholder="Password" />
-      <button onclick="signin()">Sign In</button>
-      <p class="toggle" onclick="switchForm('signup')">Don't have an account? Sign Up</p>
+      <form id="signinForm" class="needs-validation d-none" novalidate>
+        <div class="mb-3">
+          <input type="email" class="form-control" id="signinEmail" placeholder="Email" required />
+        </div>
+        <div class="mb-3">
+          <input type="password" class="form-control" id="signinPassword" placeholder="Password" required />
+        </div>
+        <div class="d-grid">
+          <button class="btn btn-success" type="submit">Sign In</button>
+        </div>
+      </form>
+
+      <p class="toggle-link mt-3" onclick="switchForm()" id="toggleText">Already have an account? Sign In</p>
     </div>
   </div>
 
@@ -55,15 +70,19 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Toggle forms
-    window.switchForm = function (form) {
-      document.getElementById("signupForm").classList.remove("active");
-      document.getElementById("signinForm").classList.remove("active");
-      document.getElementById(form + "Form").classList.add("active");
+    const signupForm = document.getElementById("signupForm");
+    const signinForm = document.getElementById("signinForm");
+
+    window.switchForm = () => {
+      const isSignup = !signupForm.classList.contains("d-none");
+      signupForm.classList.toggle("d-none", isSignup);
+      signinForm.classList.toggle("d-none", !isSignup);
+      document.getElementById("formTitle").textContent = isSignup ? "Sign In" : "Sign Up";
+      document.getElementById("toggleText").textContent = isSignup ? "Don't have an account? Sign Up" : "Already have an account? Sign In";
     };
 
-    // Sign up function
-    window.signup = async () => {
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
       const email = document.getElementById("signupEmail").value;
       const password = document.getElementById("signupPassword").value;
       const role = document.getElementById("signupRole").value;
@@ -80,12 +99,12 @@
 
         redirectToDashboard(role);
       } catch (err) {
-        alert("Error: " + err.message);
+        alert("Signup Error: " + err.message);
       }
-    };
+    });
 
-    // Sign in function
-    window.signin = async () => {
+    signinForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
       const email = document.getElementById("signinEmail").value;
       const password = document.getElementById("signinPassword").value;
 
@@ -94,29 +113,24 @@
         const uid = userCred.user.uid;
         const userDoc = await getDoc(doc(db, "users", uid));
 
-        if (!userDoc.exists()) {
-          alert("No user role data found");
-          return;
-        }
+        if (!userDoc.exists()) return alert("User not found in database.");
 
-        const role = userDoc.data().role;
-        const approved = userDoc.data().approved ?? true;
+        const data = userDoc.data();
+        if (data.role === "student" && !data.approved) return alert("Student account not approved yet.");
 
-        if (role === "student" && !approved) {
-          alert("Student account not approved yet.");
-          return;
-        }
-
-        redirectToDashboard(role);
+        redirectToDashboard(data.role);
       } catch (err) {
-        alert("Error: " + err.message);
+        alert("Signin Error: " + err.message);
       }
-    };
+    });
 
     function redirectToDashboard(role) {
-      if (role === "admin") window.location.href = "admin-dashboard.html";
-      else if (role === "teacher") window.location.href = "teacher-dashboard.html";
-      else if (role === "student") window.location.href = "student-dashboard.html";
+      const map = {
+        admin: "admin-dashboard.html",
+        teacher: "teacher-dashboard.html",
+        student: "student-dashboard.html"
+      };
+      window.location.href = map[role] || "index.html";
     }
   </script>
 </body>
