@@ -1,6 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, setDoc, doc, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  getDocs,
+  deleteDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDBq46naDEGOMX_8psHUCyE14eZKFiOi5k",
@@ -96,5 +108,9 @@ window.approveStudent = async (id) => {
   loadPendingStudents();
 };
 
+// ✅ EXPOSE addOrUpdateTeacher to make it usable in HTML onclick
+window.addOrUpdateTeacher = addOrUpdateTeacher;
+
 loadTeachers();
+loadPendingStudents();
 loadPendingStudents();
